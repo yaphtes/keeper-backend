@@ -1,0 +1,4 @@
+uploads/avatars/**
+credentials.js
+node_modules
+package-lock.json
