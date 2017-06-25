@@ -25,30 +25,36 @@ class User {
         });
     }
 
-    static updateProfile(id, user, db) {
-        let _id = ObjectId(id);
-
+    static updateProfile(info, userId, db) {
+        const _id = ObjectId(userId);
         return new Promise((resolve, reject) => {
-            db.collection('users').findOne({ email: user.email })
-                .then(doc => {
-                    if (doc) {
-                        reject(400);
+            db.collection('users').findOne({ _id })
+                .then(user => {
+                    console.log(info.currentPassword, user.password);
+                    if (bcrypt.compareSync(info.currentPassword, user.password)) {
+                        return db.collection('users').findOne({ email: info.email });
                     } else {
-                        db.collection('users').findOneAndUpdate({ _id }, {
-                            $set: {
-                                username: user.username,
-                                password: user.password,
-                                email: user.email
-                            }
-                        })
-                            .then(doc => {
-                                console.log('updateProfile:\n', doc);
-                                resolve(user);
-                            })
-                            .catch(reject);
+                        reject(409);
                     }
                 })
-                .catch(reject);
+                .then(doc => {
+                    if (!doc || doc._id == userId) {
+                        bcrypt.genSalt()
+                            .then(salt => bcrypt.hash(info.newPassword, salt))
+                            .then(hash => db.collection('users').findOneAndUpdate({ _id }, {
+                                $set: {
+                                    username: info.username,
+                                    email: info.email,
+                                    password: hash
+                                }
+                            }))
+                            .then(() => resolve({ username: info.username, email: info.email }))
+                            .catch(() => reject(500));
+                    } else {
+                        reject(400);
+                    }
+                })
+                .catch(() => reject(500));
         });
     }
 

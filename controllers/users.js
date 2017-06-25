@@ -2,7 +2,7 @@ const User = require('../models/User');
 const multer = require('multer');
 const uploadAvatar = multer({ dest: 'uploads/avatars/' });
 const fs = require('fs');
-const path = require('path')
+const path = require('path');
 
 exports.getAvatar = function (app, db) {
     return (req, res) => {
@@ -39,18 +39,23 @@ exports.changeAvatar = function (app, db) {
 
 exports.updateUserProfile = function (app, db) {
     return (req, res) => {
-        let user = new User(req.body);
-        let _id = user._id;
+        const userId = req.body._id;
+        const info = {
+            username: req.body.username,
+            email: req.body.email,
+            currentPassword: req.body.currentPassword,
+            newPassword: req.body.password
+        };
 
-        console.log('Will updateUserProfile:\n', user._id);
+        console.log('Will updateUserProfile:\n', userId);
 
-        User.updateProfile(_id, user, db)
+        User.updateProfile(info, userId, db)
             .then(user => {
                 res.status(200).send(user);
             })
             .catch(code => {
-                if (code == 400) {
-                    res.sendStatus(400);
+                if (code == 400 || code == 409) {
+                    res.sendStatus(code);
                 } else {
                     res.sendStatus(500);
                 }
