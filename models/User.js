@@ -1,5 +1,6 @@
 const jwtService = require('../services/jwtService');
 const ObjectId = require('mongodb').ObjectID;
+const bcrypt = require('bcryptjs');
 
 class User {
     constructor(props) {
@@ -58,10 +59,14 @@ class User {
                     if (doc) reject(new Error('A user already exists'));
 
                     return new Promise((resolve, reject) => {
-                        db.collection('users').insertOne(user)
-                            .then(result => {
-                                resolve(user);
-                            });
+                        bcrypt.genSalt()
+                            .then(salt => bcrypt.hash(user.password, salt))
+                            .then(hash => {
+                                user.password = hash;
+                                db.collection('users').insertOne(user)
+                                    .then(() => resolve(user));
+                            })
+                            .catch(console.log);
                     });
                 })
                 .then(user => {
@@ -72,35 +77,31 @@ class User {
         });
     }
 
-    static login(type, user, db) {
+    static login(type, enteringUser, db) {
         return new Promise((resolve, reject) => {
-            switch (type) {
-                case 'username':
-                    db.collection('users').findOne({ username: user.username })
-                        .then(user => {
-                            if (!user) {
-                                resolve();
-                            } else {
-                                jwtService.use(user, db);
-                                resolve(user);
-                            }
-                        })
-                        .catch(console.error);
-                    break;
-
-                case 'email':
-                    db.collection('users').findOne({ email: user.email })
-                        .then(user => {
-                            jwtService.use(user, db);
-                            resolve(user);
-                        })
-                        .catch(console.error);
-                    break;
-
-                default:
-                    return Promise.reject('invalid login`s type');
+            if (type == 'username' || type == 'password') {
+                db.collection('users').findOne({ [type]: enteringUser.username })
+                    .then(user => {
+                        if (!user) {
+                            resolve();
+                        } else {
+                            bcrypt.compare(enteringUser.password, user.password)
+                                .then(passwordIsValid => {
+                                    if (passwordIsValid) {
+                                        jwtService.use(user, db);
+                                        resolve(user);
+                                    } else {
+                                        resolve();
+                                    }
+                                })
+                                .catch(console.log);
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                reject('invalid login`s type');
             }
-        })
+        });
     }
 
     static getByToken(token, db) {
