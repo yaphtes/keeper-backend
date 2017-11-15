@@ -27,10 +27,8 @@ class jwtService {
         let token = req.headers.token;
         try {
             jwt.verify(token, credentials.jwtSecret);
-            console.log('token is verifyed');
             next();
         } catch (err) {
-            console.log('token is invalid:\n', err);
             res.status(401).send(err);
         }
     }

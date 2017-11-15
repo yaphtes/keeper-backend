@@ -29,15 +29,4 @@ module.exports = function (app, db) {
     app.post('/api/make-copy', cards.makeCopy(app, db));
     app.patch('/api/change-bg-color', cards.changeBgColor(app, db));
     app.put('/api/card', cards.updateCard(app, db));
-
-    // fallback
-    app.get('*', (req, res) => {
-        const root = path.resolve('public', 'index.html');
-        fs.readFile(root, (err, html) => {
-            if (err) throw err;
-
-            res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.end(html);
-        });
-    });
 };

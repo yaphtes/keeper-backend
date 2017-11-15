@@ -47,8 +47,6 @@ exports.updateUserProfile = function (app, db) {
             newPassword: req.body.password
         };
 
-        console.log('Will updateUserProfile:\n', userId);
-
         User.updateProfile(info, userId, db)
             .then(user => {
                 res.status(200).send(user);
@@ -68,8 +66,6 @@ exports.postUser = function (app, db) {
     return (req, res) => {
         let user = new User(req.body);
 
-        console.log('Will postUser:\n', user);
-
         User.insertOne(user, db)
             .then(user => res.status(200).send(user))
             .catch(err => {
@@ -83,9 +79,6 @@ exports.login = function (app, db) {
     return (req, res) => {
         let user = new User(req.query);
         let type = req.query.type;
-
-        console.log('Will login:\n', user);
-        console.log('Will login type:\n', type);
 
         User.login(type, user, db)
             .then(user => {
@@ -105,8 +98,6 @@ exports.login = function (app, db) {
 exports.getUserByToken = function (app, db) {
     return (req, res) => {
         let token = req.headers.token;
-
-        console.log('Will getUserByToken:\n', token);
 
         User.getByToken(token, db)
             .then(user => {
