@@ -15,7 +15,7 @@ app.use(express.static(path.join(__dirname, 'public', 'assets')));
 
 
 MongoClient.connect(credentials.mongo, (err, database) => {
-    if (err) console.error(err);
+    if (err) return console.error(err);
     require('./routes')(app, database);
     app.listen(app.get('port'), () => console.log('server started'));
 });
